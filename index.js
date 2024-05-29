@@ -1,3 +1,4 @@
+const { MongoClient } = require('mongodb');
 const { ApolloServer } = require('apollo-server-express');
 const { readFileSync } = require('fs');
 const express = require('express');
@@ -6,13 +7,24 @@ const expressPlayground = require(`graphql-playground-middleware-express`).defau
 const resolvers = require('./resolvers');
 const typeDefs = readFileSync('./typeDefs.graphql', 'UTF-8');
 
+require('dotenv').config();
+
 const app = express();
 
 async function startApolloServer() {
+  const MONGO_DB = process.env.DB_HOST;
+  const client = await MongoClient.connect(
+    MONGO_DB,
+    { useNewUrlParser: true }
+  );
+  const db = client.db();
+  const context = { db };
+
   // サーバーのインスタンスを作成
   const server = new ApolloServer({
     typeDefs,
-    resolvers
+    resolvers,
+    context
   });
 
   await server.start();
