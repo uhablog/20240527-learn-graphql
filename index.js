@@ -1,51 +1,29 @@
-const { ApolloServer } = require('apollo-server')
-const typeDefs = `
-  type Photo {
-    id: ID!
-    url: String!
-    name: String!
-    description: String
-  }
-  type Query {
-    totalPhotos: Int!
-    allPhotos: [Photo!]!
-  }
+const { ApolloServer } = require('apollo-server-express');
+const { readFileSync } = require('fs');
+const express = require('express');
+const expressPlayground = require(`graphql-playground-middleware-express`).default;
 
-  type Mutation {
-    postPhoto(name: String! description: String): Photo!
-  }
-`
+const resolvers = require('./resolvers');
+const typeDefs = readFileSync('./typeDefs.graphql', 'UTF-8');
 
-let _id = 0;
-let photos = [];
+const app = express();
 
-const resolvers = {
-  Query: {
-    totalPhotos: () => photos.length,
-    allPhotos: () => photos
-  },
+async function startApolloServer() {
+  // サーバーのインスタンスを作成
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers
+  });
 
-  Mutation: {
-    postPhoto(parent, args) {
-      const newPhoto = {
-        id: _id++,
-        ...args
-      }
-      photos.push(newPhoto);
-      return newPhoto;
-    }
-  },
-  Photo: {
-    url: parent => `http://yoursite.com/img/${parent.id}.jpg`
-  }
+  await server.start();
+  server.applyMiddleware({app});
+
+  app.get('/', (req, res) => res.end('Welcome to the PhotoShare API'));
+  app.get('/playground', expressPlayground({ endpoint: '/graphql' }));
+
+  app.listen({ port: 4000 }, () =>
+    console.log(`GraphQL Server running @ http://localhost:4000${server.graphqlPath}`)
+  );
 }
 
-// サーバーのインスタンスを作成
-const server = new ApolloServer({
-  typeDefs,
-  resolvers
-});
-
-server
-  .listen()
-  .then(({url}) => console.log(`GraphQL Service running on {url}`));
+startApolloServer();
