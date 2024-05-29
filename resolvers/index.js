@@ -1,4 +1,6 @@
 const { GraphQLScalarType } = require('graphql');
+const { authorizeWithGithub } = require('../libs');
+require('dotenv').config();
 
 let _id = 0;
 
@@ -68,6 +70,49 @@ const resolvers = {
       }
       photos.push(newPhoto);
       return newPhoto;
+    },
+
+    async githubAuth(parent, { code }, { db }) {
+      let {
+        message,
+        access_token,
+        avatar_url,
+        login,
+        name
+      } = await authorizeWithGithub({
+        client_id: process.env.GITHUB_CLIENT_ID,
+        client_secret: process.env.GITHUB_CLIENT_SECRET,
+        code
+      });
+
+      if (message) {
+        throw new Error(message);
+      }
+
+      const latestUserInfo = {
+        name,
+        githubLogin: login,
+        githubToken: access_token,
+        avatar: avatar_url
+      }
+
+      const result = await db
+        .collection('users')
+        .replaceOne({ githubLogin: login }, latestUserInfo, { upsert: true });
+
+      let user;
+
+      if (result.acknowledged) {
+        if (result.upsertedId) {
+          user = await db.collection('users').findOne({_id: result.upsertedId._id});
+        } else {
+          user = await db.collection('users').findOne({githubLogin: login});
+        }
+      } else {
+        console.error('Document replace failed');
+      }
+
+      return { user, token: access_token }
     }
   },
   Photo: {
