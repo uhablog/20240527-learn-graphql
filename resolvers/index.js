@@ -46,13 +46,17 @@ let tags = [
 const resolvers = {
   Query: {
     me: (parent, args, { currentUser }) => currentUser,
-    totalPhotos: (parent, args, { db }) => 
-      db.collection('photos')
-        .estimatedDocumentCount(),
-    allPhotos: (parent, args, { db }) =>
-      db.collection('photos')
+    totalPhotos: (parent, args, { db }) => {
+      console.log('totalphoto');
+      return db.collection('photos')
+        .estimatedDocumentCount()
+    },
+    allPhotos: (parent, args, { db }) => {
+      console.log('allphotos');
+      return db.collection('photos')
         .find()
-        .toArray(),
+        .toArray()
+    },
     totalUsers: (parent, args, { db }) =>
       db.collection('users')  
         .estimatedDocumentCount(),
