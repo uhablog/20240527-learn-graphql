@@ -86,6 +86,7 @@ const resolvers = {
     },
 
     async githubAuth(parent, { code }, { db }) {
+      console.log(`githubAuth resolver started. code is ${code}`);
       let {
         message,
         access_token,

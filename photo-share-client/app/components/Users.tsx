@@ -1,7 +1,17 @@
 "use client";
 
 import { User } from "@/types/User";
-import { ApolloCache, ApolloQueryResult, DefaultContext, FetchResult, MutationFunctionOptions, OperationVariables, gql, useMutation, useQuery } from "@apollo/client";
+import {
+  ApolloCache,
+  ApolloQueryResult,
+  DefaultContext,
+  FetchResult,
+  MutationFunctionOptions,
+  OperationVariables,
+  gql,
+  useMutation,
+  useQuery
+} from "@apollo/client";
 import Image from "next/image";
 
 const query = gql`
